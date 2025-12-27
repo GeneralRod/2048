@@ -12,7 +12,7 @@
         <div class="settings-container">
             <h2>Settings</h2>
             <div class="setting-group">
-                <label>Animation Speed</label>
+                <label for="animation-speed">Animation Speed</label>
                 <select id="animation-speed">
                     <option value="slow">Slow</option>
                     <option value="normal" selected>Normal</option>
@@ -20,20 +20,70 @@
                 </select>
             </div>
             <div class="setting-group">
-                <label>Sound Effects</label>
+                <label for="sound-effects">Sound &amp; Ambient</label>
                 <input type="checkbox" id="sound-effects" checked>
             </div>
             <div class="setting-group">
-                <label>Show Grid Lines</label>
+                <label for="grid-lines">Show Grid Lines</label>
                 <input type="checkbox" id="grid-lines" checked>
             </div>
             <div class="setting-group">
-                <label>Theme</label>
+                <label for="theme">Theme</label>
                 <select id="theme">
                     <option value="cold" selected>Cold (Royal Blue)</option>
                     <option value="warm">Warm (Sunset)</option>
                     <option value="dark">Dark (Night)</option>
                 </select>
+            </div>
+            <div class="setting-group">
+                <label for="board-size">Board Size</label>
+                <select id="board-size">
+                    <option value="4" selected>4 x 4 (Standard)</option>
+                    <option value="5">5 x 5 (Strategist)</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Power-Ups</label>
+                <div class="powerup-grid">
+                    <label class="toggle">
+                        <input type="checkbox" id="powerup-cleanse" checked>
+                        <span>
+                            <strong>Void Pulse</strong>
+                            <small>Deletes the lowest-value tile</small>
+                        </span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="powerup-double">
+                        <span>
+                            <strong>Flux Surge</strong>
+                            <small>Forces the next spawn to be stronger</small>
+                        </span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="powerup-undo" checked>
+                        <span>
+                            <strong>Time Stitch</strong>
+                            <small>Stores undo charges for mistakes</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Sound Layers</label>
+                <div class="slider-stack">
+                    <label>
+                        Ambient Pad
+                        <input type="range" id="ambient-volume" min="0" max="1" step="0.05">
+                    </label>
+                    <label>
+                        Percussion
+                        <input type="range" id="percussion-volume" min="0" max="1" step="0.05">
+                    </label>
+                    <label>
+                        FX &amp; Sparks
+                        <input type="range" id="fx-volume" min="0" max="1" step="0.05">
+                    </label>
+                </div>
             </div>
             <div class="settings-buttons">
                 <button class="menu-button primary" onclick="saveSettings()">Save</button>
@@ -41,6 +91,54 @@
             </div>
         </div>
     </div>
+
+    <!-- Daily Challenge -->
+    <section class="daily-section" aria-live="polite">
+        <div class="daily-card">
+            <div class="daily-header">
+                <h2>Daily Challenge</h2>
+                <div id="daily-status" class="daily-status">Checking...</div>
+            </div>
+            <p id="daily-description">Loading today's board...</p>
+            <div class="daily-meta">
+                <span id="daily-theme" class="pill">Theme</span>
+                <span id="daily-target" class="pill">Target</span>
+            </div>
+            <div class="daily-actions">
+                <button class="menu-button primary" id="start-daily">Play Daily</button>
+                <button class="menu-button secondary" id="view-challenges">History</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievements Preview -->
+    <section class="achievements-section">
+        <div class="achievements-card">
+            <div>
+                <h2>Achievements</h2>
+                <p id="achievement-summary">Track your milestones and unlock new looks.</p>
+            </div>
+            <button class="menu-button primary" id="view-achievements">View Badges</button>
+        </div>
+    </section>
+
+    <!-- Leaderboard Preview -->
+    <section class="leaderboard-section">
+        <div class="leaderboard-header">
+            <h2>Local Leaderboard</h2>
+            <label for="leaderboard-mode">Mode</label>
+            <select id="leaderboard-mode" aria-label="Select game mode to view leaderboard">
+                <option value="classic">Classic</option>
+                <option value="timed">Timed</option>
+                <option value="limited">Limited Moves</option>
+                <option value="endless">Endless</option>
+                <option value="daily">Daily</option>
+            </select>
+        </div>
+        <ol id="leaderboard-list" class="leaderboard-list" aria-live="polite">
+            <li class="empty">No results yet. Play a game to add a score.</li>
+        </ol>
+    </section>
 
     <!-- Game Modes Screen -->
     <div id="game-modes-screen" class="screen">
@@ -75,6 +173,27 @@
         </div>
     </div>
     
+    <div id="challenge-history-modal" class="challenge-modal hidden" role="dialog" aria-modal="true">
+        <div class="challenge-history-card">
+            <div class="challenge-history-header">
+                <h3>Challenge History</h3>
+                <button id="close-history" class="control-button">✕</button>
+            </div>
+            <ul id="challenge-history-list"></ul>
+        </div>
+    </div>
+
+    <div id="achievements-modal" class="achievement-modal hidden" role="dialog" aria-modal="true">
+        <div class="achievement-card">
+            <div class="achievement-header">
+                <h3>Unlocked Badges</h3>
+                <button id="close-achievements" class="control-button">✕</button>
+            </div>
+            <ul id="achievement-list"></ul>
+        </div>
+    </div>
+    
+    <script src="shared.js"></script>
     <script src="menu.js"></script>
 </body>
 </html>
