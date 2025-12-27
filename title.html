@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 - Title</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen active">
+        <div class="light-rays">
+            <div class="light-ray"></div>
+            <div class="light-ray"></div>
+            <div class="light-ray"></div>
+            <div class="light-ray"></div>
+            <div class="light-ray"></div>
+            <div class="light-ray"></div>
+            <div class="light-ray"></div>
+        </div>
+        <div class="title-container">
+            <h1 class="title-logo">
+                <span class="title-2">2</span><span class="title-0">0</span><span class="title-4">4</span><span class="title-8">8</span>
+            </h1>
+            <div class="title-subtitle">Slide & Merge to Win!</div>
+            <div class="menu-buttons">
+                <button class="menu-button primary" onclick="goToMenu()">Menu</button>
+                <button class="menu-button secondary" onclick="goToGame()">Quick Start</button>
+            </div>
+            <div class="credits">Made by Robertousvandal</div>
+        </div>
+    </div>
+    
+    <script src="title.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 - Menu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen active">
+        <div class="settings-container">
+            <h2>Settings</h2>
+            <div class="setting-group">
+                <label>Animation Speed</label>
+                <select id="animation-speed">
+                    <option value="slow">Slow</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="fast">Fast</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Sound Effects</label>
+                <input type="checkbox" id="sound-effects" checked>
+            </div>
+            <div class="setting-group">
+                <label>Show Grid Lines</label>
+                <input type="checkbox" id="grid-lines" checked>
+            </div>
+            <div class="setting-group">
+                <label>Theme</label>
+                <select id="theme">
+                    <option value="cold" selected>Cold (Royal Blue)</option>
+                    <option value="warm">Warm (Sunset)</option>
+                    <option value="dark">Dark (Night)</option>
+                </select>
+            </div>
+            <div class="settings-buttons">
+                <button class="menu-button primary" onclick="saveSettings()">Save</button>
+                <button class="menu-button secondary" onclick="goToTitle()">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Modes Screen -->
+    <div id="game-modes-screen" class="screen">
+        <div class="modes-container">
+            <h2>Game Modes</h2>
+            <div class="mode-cards">
+                <div class="mode-card" onclick="startMode('classic')">
+                    <h3>Classic</h3>
+                    <p>Reach 2048 to win</p>
+                    <div class="mode-difficulty">Easy</div>
+                </div>
+                <div class="mode-card" onclick="startMode('timed')">
+                    <h3>Timed Challenge</h3>
+                    <p>Reach highest score in 5 minutes</p>
+                    <div class="mode-difficulty">Medium</div>
+                </div>
+                <div class="mode-card" onclick="startMode('limited')">
+                    <h3>Limited Moves</h3>
+                    <p>Reach 2048 with only 100 moves</p>
+                    <div class="mode-difficulty">Hard</div>
+                </div>
+                <div class="mode-card" onclick="startMode('endless')">
+                    <h3>Endless</h3>
+                    <p>Play without limits</p>
+                    <div class="mode-difficulty">Relaxing</div>
+                </div>
+            </div>
+            <div class="menu-navigation">
+                <button class="menu-button secondary" onclick="showSettings()">Settings</button>
+                <button class="menu-button secondary" onclick="goToTitle()">Back</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="menu.js"></script>
+</body>
+</html>
