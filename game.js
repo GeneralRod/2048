@@ -9,6 +9,9 @@ const MOVE_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
 
 const deepCloneGrid = (grid) => grid.map(row => [...row]);
 
+const DIRECTION_ARROWS = {left: '←', right: '→', up: '↑', down: '↓'};
+const MAX_UNDOS = 3;
+
 class AmbientSoundtrack {
     constructor(enabled = true) {
         this.enabled = enabled;
@@ -138,6 +141,8 @@ class Game2048 {
         this.mergeCells = new Set();
         this.leaderboardLogged = false;
         this.dailyChallenge = null;
+        this.undoStack = [];
+        this.assistEnabled = false;
 
         // DOM references
         this.tileContainer = document.getElementById('tile-container');
@@ -157,6 +162,10 @@ class Game2048 {
         this.tutorialSkip = document.getElementById('tutorial-skip');
         this.exportButton = document.getElementById('export-replay');
         this.copyButton = document.getElementById('copy-replay');
+        this.hintButton = document.getElementById('hint-button');
+        this.undoButton = document.getElementById('undo-button');
+        this.assistToggle = document.getElementById('assist-toggle');
+        this.hintIndicator = document.getElementById('hint-indicator');
 
         this.settings = this.loadSettings();
         this.replay = new ReplayManager(() => ({grid: this.grid, score: this.score}));
@@ -219,6 +228,7 @@ class Game2048 {
         this.timeLeft = 0;
         this.mergeCells.clear();
         this.leaderboardLogged = false;
+        this.undoStack = [];
         this.tileContainer.innerHTML = '';
         this.currentMode = mode;
 
@@ -234,6 +244,8 @@ class Game2048 {
         }
         this.renderBoard();
         this.hideMessage();
+        this.updateUndoButton();
+        this.clearHintIndicator();
         this.maybeShowTutorial();
     }
 
@@ -298,7 +310,165 @@ class Game2048 {
                 this.showToast('Replay copied to clipboard');
             });
         }
+        if (this.hintButton) {
+            this.hintButton.addEventListener('click', () => this.showHint());
+        }
+        if (this.undoButton) {
+            this.undoButton.addEventListener('click', () => this.undo());
+        }
+        if (this.assistToggle) {
+            this.assistToggle.addEventListener('click', () => this.toggleAssist());
+        }
     }
+
+    // ── Undo ──────────────────────────────────────────────────────────────────
+
+    saveUndoState() {
+        const undoEnabled = this.settings.powerups?.undo !== false;
+        if (!undoEnabled) return;
+        this.undoStack.push({grid: deepCloneGrid(this.grid), score: this.score});
+        if (this.undoStack.length > MAX_UNDOS) this.undoStack.shift();
+    }
+
+    undo() {
+        if (this.over || !this.undoStack.length) return;
+        const state = this.undoStack.pop();
+        this.grid = state.grid;
+        this.score = state.score;
+        this.mergeCells.clear();
+        this.renderBoard();
+        this.updateScore();
+        this.updateUndoButton();
+        this.clearHintIndicator();
+        this.showToast('Undone');
+    }
+
+    updateUndoButton() {
+        if (!this.undoButton) return;
+        const undoEnabled = this.settings.powerups?.undo !== false;
+        const remaining = undoEnabled ? this.undoStack.length : 0;
+        this.undoButton.textContent = `Undo (${remaining})`;
+        this.undoButton.disabled = remaining === 0;
+    }
+
+    // ── Hint / Assist ─────────────────────────────────────────────────────────
+
+    simulateDirection(grid, direction) {
+        const size = this.size;
+        let totalGain = 0;
+        let moved = false;
+        const newGrid = deepCloneGrid(grid);
+        const reverse = direction === 'right' || direction === 'down';
+
+        const processLine = (line) => {
+            const working = reverse ? [...line].reverse() : [...line];
+            const filtered = working.filter(v => v !== 0);
+            const merged = [];
+            let gain = 0;
+            let i = 0;
+            while (i < filtered.length) {
+                if (filtered[i] === filtered[i + 1]) {
+                    const val = filtered[i] * 2;
+                    merged.push(val);
+                    gain += val;
+                    i += 2;
+                } else {
+                    merged.push(filtered[i]);
+                    i++;
+                }
+            }
+            while (merged.length < size) merged.push(0);
+            return {line: reverse ? merged.reverse() : merged, gain};
+        };
+
+        if (direction === 'left' || direction === 'right') {
+            for (let r = 0; r < size; r++) {
+                const {line, gain} = processLine(newGrid[r]);
+                if (!line.every((v, i) => v === newGrid[r][i])) moved = true;
+                newGrid[r] = line;
+                totalGain += gain;
+            }
+        } else {
+            for (let c = 0; c < size; c++) {
+                const col = newGrid.map(row => row[c]);
+                const {line, gain} = processLine(col);
+                if (!line.every((v, i) => v === col[i])) moved = true;
+                line.forEach((val, r) => { newGrid[r][c] = val; });
+                totalGain += gain;
+            }
+        }
+
+        const emptyAfter = newGrid.flat().filter(v => v === 0).length;
+        return {moved, gain: totalGain, empty: emptyAfter, grid: newGrid};
+    }
+
+    getBestMove() {
+        const directions = ['left', 'right', 'up', 'down'];
+        let bestDir = null;
+        let bestScore = -1;
+        for (const dir of directions) {
+            const {moved, gain, empty} = this.simulateDirection(this.grid, dir);
+            if (!moved) continue;
+            // Weight: score gain matters most, open cells are a bonus
+            const value = gain * 2 + empty * 10;
+            if (value > bestScore) {
+                bestScore = value;
+                bestDir = dir;
+            }
+        }
+        return bestDir;
+    }
+
+    showHint() {
+        if (this.over) return;
+        const dir = this.getBestMove();
+        if (!dir) return;
+        const arrow = DIRECTION_ARROWS[dir];
+        this.showToast(`Hint: ${arrow} ${dir.charAt(0).toUpperCase() + dir.slice(1)}`);
+        this.setHintIndicator(dir);
+    }
+
+    setHintIndicator(direction) {
+        if (!this.hintIndicator) return;
+        this.hintIndicator.dataset.direction = direction;
+        this.hintIndicator.textContent = DIRECTION_ARROWS[direction];
+        this.hintIndicator.classList.remove('hidden');
+        clearTimeout(this.hintTimeout);
+        this.hintTimeout = setTimeout(() => this.clearHintIndicator(), 2500);
+    }
+
+    clearHintIndicator() {
+        if (!this.hintIndicator) return;
+        this.hintIndicator.classList.add('hidden');
+        delete this.hintIndicator.dataset.direction;
+    }
+
+    toggleAssist() {
+        this.assistEnabled = !this.assistEnabled;
+        if (this.assistToggle) {
+            this.assistToggle.textContent = `Assist: ${this.assistEnabled ? 'On' : 'Off'}`;
+            this.assistToggle.classList.toggle('active', this.assistEnabled);
+        }
+        if (!this.assistEnabled) this.clearHintIndicator();
+    }
+
+    // ── Achievements ──────────────────────────────────────────────────────────
+
+    evaluateAchievements() {
+        if (typeof achievementManager === 'undefined') return;
+        const highestTile = Math.max(...this.grid.flat());
+        const dailyData = readJson('game2048-daily', {completed: []});
+        const winStreak = parseInt(localStorage.getItem('game2048-win-streak') || '0', 10);
+        const newlyUnlocked = achievementManager.evaluate({
+            highestTile,
+            score: this.score,
+            dailyCompleted: dailyData.completed?.length || 0,
+            winStreak
+        });
+        newlyUnlocked.forEach(ach => this.showToast(`Achievement: ${ach.title}`));
+    }
+
+    // ── Core game methods ─────────────────────────────────────────────────────
 
     maybeShowTutorial() {
         const dismissed = localStorage.getItem('game2048-tutorial-dismissed') === '1';
@@ -373,6 +543,14 @@ class Game2048 {
             this.updateScore();
             this.replay.captureSnapshot(direction, this.previousGrid);
             this.checkGameStatus();
+            this.evaluateAchievements();
+            this.updateUndoButton();
+            if (this.assistEnabled && !this.over) {
+                const best = this.getBestMove();
+                if (best) this.setHintIndicator(best);
+            } else {
+                this.clearHintIndicator();
+            }
             if (this.currentMode === 'limited') {
                 this.movesLeft--;
                 this.updateMovesDisplay();
@@ -387,6 +565,7 @@ class Game2048 {
         document.addEventListener('keydown', (event) => {
             if (!MOVE_KEYS.includes(event.key) || this.over) return;
             event.preventDefault();
+            this.saveUndoState();
             const moved = this.move(this.keyToDirection(event.key));
             handleMoveResult(this.keyToDirection(event.key), moved);
         });
@@ -406,6 +585,7 @@ class Game2048 {
             const absDy = Math.abs(dy);
             if (Math.max(absDx, absDy) < 30) return;
             const direction = absDx > absDy ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+            this.saveUndoState();
             const moved = this.move(direction);
             handleMoveResult(direction, moved);
         });
@@ -572,6 +752,9 @@ class Game2048 {
                 this.score >= this.dailyChallenge.targetScore) {
             dailyChallengeManager.markCompleted(this.dailyChallenge.date);
         }
+        // Update win streak
+        const streak = parseInt(localStorage.getItem('game2048-win-streak') || '0', 10);
+        localStorage.setItem('game2048-win-streak', this.won ? streak + 1 : 0);
         this.leaderboardLogged = true;
     }
 

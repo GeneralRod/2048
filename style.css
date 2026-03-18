@@ -864,3 +864,45 @@ h1 {
         font-size: 40px;
     }
 }
+
+/* Hint indicator */
+.hint-indicator {
+    position: absolute;
+    bottom: -44px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    color: #fff;
+    background: rgba(119, 110, 101, 0.85);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: hint-pulse 0.5s ease-out;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.hint-indicator.hidden {
+    display: none;
+}
+
+@keyframes hint-pulse {
+    0%   { transform: translateX(-50%) scale(0.6); opacity: 0; }
+    60%  { transform: translateX(-50%) scale(1.15); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* Assist active state */
+.control-button.active {
+    background: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
+}
+
+/* Undo disabled state */
+.control-button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
