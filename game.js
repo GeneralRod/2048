@@ -137,6 +137,7 @@ class Game2048 {
         this.movesLeft = 0;
         this.mergeCells = new Set();
         this.leaderboardLogged = false;
+        this.dailyChallenge = null;
 
         // DOM references
         this.tileContainer = document.getElementById('tile-container');
@@ -199,6 +200,10 @@ class Game2048 {
     initGame() {
         const params = new URLSearchParams(window.location.search);
         this.currentMode = params.get('mode') || 'classic';
+        if (this.currentMode === 'daily') {
+            const activeChallenge = readJson('game2048-daily-active', null);
+            if (activeChallenge) this.dailyChallenge = activeChallenge;
+        }
         if (this.modeDisplay) {
             this.modeDisplay.textContent = this.currentMode.charAt(0).toUpperCase() + this.currentMode.slice(1);
         }
@@ -221,8 +226,12 @@ class Game2048 {
         this.setupMode(mode);
         this.replay.reset();
         this.updateScore();
-        this.addRandomTile();
-        this.addRandomTile();
+        if (mode === 'daily' && this.dailyChallenge?.board) {
+            this.grid = this.dailyChallenge.board.map(row => [...row]);
+        } else {
+            this.addRandomTile();
+            this.addRandomTile();
+        }
         this.renderBoard();
         this.hideMessage();
         this.maybeShowTutorial();
@@ -252,6 +261,14 @@ class Game2048 {
                     this.updateMovesDisplay();
                 }
                 break;
+            case 'daily': {
+                const targetDisplay = document.getElementById('daily-target-display');
+                if (targetDisplay && this.dailyChallenge) {
+                    targetDisplay.style.display = 'block';
+                    targetDisplay.textContent = `Target: ${this.dailyChallenge.targetScore}`;
+                }
+                break;
+            }
             case 'endless':
             case 'classic':
             default:
@@ -368,7 +385,7 @@ class Game2048 {
         };
 
         document.addEventListener('keydown', (event) => {
-            if (!MOVE_KEYS.includes(event.key) || (this.over && !this.won)) return;
+            if (!MOVE_KEYS.includes(event.key) || this.over) return;
             event.preventDefault();
             const moved = this.move(this.keyToDirection(event.key));
             handleMoveResult(this.keyToDirection(event.key), moved);
@@ -382,7 +399,7 @@ class Game2048 {
         }, {passive: true});
 
         document.addEventListener('touchend', (e) => {
-            if (this.over && !this.won) return;
+            if (this.over) return;
             const dx = e.changedTouches[0].clientX - touchStartX;
             const dy = e.changedTouches[0].clientY - touchStartY;
             const absDx = Math.abs(dx);
@@ -551,6 +568,10 @@ class Game2048 {
         if (this.leaderboardLogged || typeof leaderboardManager === 'undefined') return;
         leaderboardManager.addEntry(this.currentMode, this.score);
         window.dispatchEvent(new CustomEvent('leaderboardUpdated', {detail: {mode: this.currentMode}}));
+        if (this.currentMode === 'daily' && this.dailyChallenge &&
+                this.score >= this.dailyChallenge.targetScore) {
+            dailyChallengeManager.markCompleted(this.dailyChallenge.date);
+        }
         this.leaderboardLogged = true;
     }
 
