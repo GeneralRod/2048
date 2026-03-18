@@ -387,22 +387,22 @@ body {
     text-transform: uppercase;
 }
 
-.mode-difficulty:contains("Easy") {
+.mode-difficulty[data-difficulty="easy"] {
     background: #4caf50;
     color: white;
 }
 
-.mode-difficulty:contains("Medium") {
+.mode-difficulty[data-difficulty="medium"] {
     background: #ff9800;
     color: white;
 }
 
-.mode-difficulty:contains("Hard") {
+.mode-difficulty[data-difficulty="hard"] {
     background: #f44336;
     color: white;
 }
 
-.mode-difficulty:contains("Relaxing") {
+.mode-difficulty[data-difficulty="relaxing"] {
     background: #9c27b0;
     color: white;
 }
