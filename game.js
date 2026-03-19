@@ -167,6 +167,9 @@ class Game2048 {
         this.assistToggle = document.getElementById('assist-toggle');
         this.hintIndicator = document.getElementById('hint-indicator');
 
+        // Show stored best immediately on page load
+        this.bestElement.textContent = this.best;
+
         this.settings = this.loadSettings();
         this.replay = new ReplayManager(() => ({grid: this.grid, score: this.score}));
         this.soundtrack = new AmbientSoundtrack(this.settings.soundEffects !== false);
@@ -229,6 +232,7 @@ class Game2048 {
         this.mergeCells.clear();
         this.leaderboardLogged = false;
         this.undoStack = [];
+        this.lastMilestone = 0;
         this.tileContainer.innerHTML = '';
         this.currentMode = mode;
 
@@ -452,6 +456,24 @@ class Game2048 {
         if (!this.assistEnabled) this.clearHintIndicator();
     }
 
+    // ── Milestones ────────────────────────────────────────────────────────────
+
+    checkMilestone() {
+        const milestones = [500, 1000, 2000, 5000, 10000, 20000, 50000];
+        for (const m of milestones) {
+            if (this.score >= m && m > this.lastMilestone) {
+                this.lastMilestone = m;
+                this.showToast(`Score milestone: ${m.toLocaleString()}`);
+            }
+        }
+    }
+
+    // ── Keep Going ────────────────────────────────────────────────────────────
+
+    keepGoing() {
+        this.hideMessage();
+    }
+
     // ── Achievements ──────────────────────────────────────────────────────────
 
     evaluateAchievements() {
@@ -543,6 +565,7 @@ class Game2048 {
             this.updateScore();
             this.replay.captureSnapshot(direction, this.previousGrid);
             this.checkGameStatus();
+            this.checkMilestone();
             this.evaluateAchievements();
             this.updateUndoButton();
             if (this.assistEnabled && !this.over) {
@@ -563,10 +586,23 @@ class Game2048 {
         };
 
         document.addEventListener('keydown', (event) => {
+            // Ctrl+Z / Cmd+Z → undo
+            if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+                event.preventDefault();
+                this.undo();
+                return;
+            }
+            // H → hint
+            if (event.key === 'h' || event.key === 'H') {
+                this.showHint();
+                return;
+            }
             if (!MOVE_KEYS.includes(event.key) || this.over) return;
             event.preventDefault();
             this.saveUndoState();
             const moved = this.move(this.keyToDirection(event.key));
+            // If the move didn't change anything, reclaim the undo slot
+            if (!moved) this.undoStack.pop();
             handleMoveResult(this.keyToDirection(event.key), moved);
         });
 
@@ -587,6 +623,7 @@ class Game2048 {
             const direction = absDx > absDy ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
             this.saveUndoState();
             const moved = this.move(direction);
+            if (!moved) this.undoStack.pop();
             handleMoveResult(direction, moved);
         });
     }
@@ -761,6 +798,8 @@ class Game2048 {
     showMessage(text, className) {
         this.messageContainer.querySelector('p').textContent = text;
         this.messageContainer.className = `game-message ${className}`;
+        const keepGoingBtn = this.messageContainer.querySelector('.keep-going-button');
+        if (keepGoingBtn) keepGoingBtn.style.display = this.won ? 'inline-block' : 'none';
     }
 
     hideMessage() {

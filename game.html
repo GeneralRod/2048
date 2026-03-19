@@ -23,7 +23,7 @@
                 <button class="control-button secondary" id="copy-replay">Copy replay</button>
                 <button class="control-button secondary" id="hint-button">Hint</button>
                 <button class="control-button secondary" id="undo-button">Undo (0)</button>
-                <button class="control-button secondary" id="assist-toggle">Assist: On</button>
+                <button class="control-button secondary" id="assist-toggle">Assist: Off</button>
             </div>
         </div>
         
@@ -46,6 +46,7 @@
                 <div class="game-message" id="game-message">
                     <p></p>
                     <div class="lower">
+                        <button class="keep-going-button" onclick="game.keepGoing()" style="display:none;">Keep Going</button>
                         <button class="retry-button" onclick="game.restart()">Try again</button>
                     </div>
                 </div>
