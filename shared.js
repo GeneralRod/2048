@@ -1,3 +1,10 @@
+/**
+ * @file shared.js
+ * Cross-page utilities loaded by both menu.html and game.html.
+ * Attaches settingsManager, leaderboardManager, dailyChallengeManager,
+ * and achievementManager to window. Also exports readJson / saveJson helpers.
+ */
+
 const LEADERBOARD_KEY = 'game2048-leaderboard';
 const MAX_LEADERBOARD_ENTRIES = 6;
 const DAILY_KEY = 'game2048-daily';
@@ -59,6 +66,13 @@ const ACHIEVEMENTS = [
     }
 ];
 
+/**
+ * Reads and JSON-parses a value from localStorage.
+ * Returns fallback on parse error or missing key.
+ * @param {string} key
+ * @param {*} [fallback={}]
+ * @returns {*}
+ */
 function readJson(key, fallback = {}) {
     try {
         return JSON.parse(localStorage.getItem(key)) || fallback;
@@ -67,10 +81,22 @@ function readJson(key, fallback = {}) {
     }
 }
 
+/**
+ * Serialises value to JSON and writes it to localStorage.
+ * @param {string} key
+ * @param {*} value
+ */
 function saveJson(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
 
+/**
+ * Deep-merges a partial settings object with DEFAULT_SETTINGS.
+ * Safe to call with undefined or incomplete objects — all missing keys
+ * are filled from defaults. Used by settingsManager.load() and .save().
+ * @param {Partial<object>} [saved={}]
+ * @returns {object} Complete settings object
+ */
 function mergeSettings(saved = {}) {
     const merged = structuredClone ? structuredClone(DEFAULT_SETTINGS) : JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
     merged.animationSpeed = saved.animationSpeed || merged.animationSpeed;
@@ -126,11 +152,23 @@ window.formatLeaderboardEntry = function (entry, index) {
     return `${index + 1}. ${entry.score} pts · ${when}`;
 };
 
+/**
+ * Deterministic pseudo-random number in [0, 1) from a numeric seed.
+ * Uses a sine-based formula — the same seed always returns the same value.
+ * @param {number} seed
+ * @returns {number}
+ */
 function seededRandom(seed) {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
 }
 
+/**
+ * Generates a 4×4 grid with exactly 6 pre-placed tiles using the given seed.
+ * The same seed always produces the same board (used for daily challenges).
+ * @param {number} seed
+ * @returns {number[][]} 4×4 board with 6 tiles placed
+ */
 function buildDailyBoard(seed) {
     const grid = Array(4).fill().map(() => Array(4).fill(0));
     let currentSeed = seed;

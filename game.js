@@ -1,3 +1,10 @@
+/**
+ * @file game.js
+ * Core game engine for the 2048 web game.
+ * Exports: Game2048 (via window.game), ReplayManager, AmbientSoundtrack.
+ * Depends on shared.js being loaded first (provides readJson, leaderboardManager, etc.).
+ */
+
 // Enhanced 2048 game with replay + audio + accessibility polish
 const ANIMATION_SPEEDS = {
     slow: 0.48,
@@ -357,6 +364,13 @@ class Game2048 {
 
     // ── Hint / Assist ─────────────────────────────────────────────────────────
 
+    /**
+     * Pure simulation of a move on an arbitrary grid — does NOT mutate game state.
+     * Used by getBestMove() to score candidate directions.
+     * @param {number[][]} grid
+     * @param {'left'|'right'|'up'|'down'} direction
+     * @returns {{ moved: boolean, gain: number, empty: number, grid: number[][] }}
+     */
     simulateDirection(grid, direction) {
         const size = this.size;
         let totalGain = 0;
@@ -406,6 +420,11 @@ class Game2048 {
         return {moved, gain: totalGain, empty: emptyAfter, grid: newGrid};
     }
 
+    /**
+     * Evaluates all four directions and returns the one with the highest
+     * heuristic score: (scoreGain × 2) + (emptyCells × 10).
+     * @returns {'left'|'right'|'up'|'down'|null} best direction, or null if no move is possible
+     */
     getBestMove() {
         const directions = ['left', 'right', 'up', 'down'];
         let bestDir = null;
@@ -650,6 +669,12 @@ class Game2048 {
         this.grid[chosen.r][chosen.c] = Math.random() < 0.9 ? 2 : 4;
     }
 
+    /**
+     * Applies a move to the board in the given direction.
+     * Saves the current grid to this.previousGrid before mutating.
+     * @param {'left'|'right'|'up'|'down'} direction
+     * @returns {boolean} true if any tile moved or merged
+     */
     move(direction) {
         this.previousGrid = deepCloneGrid(this.grid);
         this.mergeCells.clear();
@@ -688,6 +713,15 @@ class Game2048 {
         return moved;
     }
 
+    /**
+     * Core merge algorithm for a single row or column.
+     * Filters zeroes, merges adjacent equal values left-to-right (once per cell),
+     * then pads with trailing zeroes. When reverse=true the line is flipped
+     * before and after processing to handle right/down slides.
+     * @param {number[]} line  - Array of 4 tile values (0 = empty)
+     * @param {boolean}  reverse - true for right/down directions
+     * @returns {{ line: number[], gain: number, mergeIndices: number[] }}
+     */
     processLine(line, reverse = false) {
         const working = reverse ? [...line].reverse() : [...line];
         const filtered = working.filter(value => value !== 0);
@@ -781,6 +815,11 @@ class Game2048 {
         return true;
     }
 
+    /**
+     * Persists the current score to the leaderboard (once per game).
+     * Also handles daily challenge completion and win-streak tracking.
+     * Guarded by this.leaderboardLogged to prevent double-submission.
+     */
     persistLeaderboard() {
         if (this.leaderboardLogged || typeof leaderboardManager === 'undefined') return;
         leaderboardManager.addEntry(this.currentMode, this.score);
