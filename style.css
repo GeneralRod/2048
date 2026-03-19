@@ -724,6 +724,29 @@ h1 {
     margin-bottom: 20px;
 }
 
+.game-message .lower {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.keep-going-button {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.keep-going-button:hover {
+    opacity: 0.85;
+}
+
 .game-explanation {
     margin: 20px 0;
     text-align: center;
@@ -863,4 +886,47 @@ h1 {
     .game-message p {
         font-size: 40px;
     }
+}
+
+/* Hint indicator */
+.hint-indicator {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    font-size: 26px;
+    color: #fff;
+    background: rgba(30, 60, 114, 0.82);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: hint-pulse 0.4s ease-out;
+    pointer-events: none;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+}
+
+.hint-indicator.hidden {
+    display: none;
+}
+
+@keyframes hint-pulse {
+    0%   { transform: scale(0.5); opacity: 0; }
+    65%  { transform: scale(1.18); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Assist active state */
+.control-button.active {
+    background: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
+}
+
+/* Undo disabled state */
+.control-button:disabled {
+    opacity: 0.4;
+    cursor: default;
 }
