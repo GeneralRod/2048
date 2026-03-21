@@ -1,5 +1,5 @@
 // Menu page navigation and functionality
-let currentScreen = 'settings';
+let currentScreen = 'modes';
 let selectedMode = 'classic';
 const leaderboardModeSelect = document.getElementById('leaderboard-mode');
 const leaderboardList = document.getElementById('leaderboard-list');
@@ -46,13 +46,11 @@ function goToGame() {
 
 function showSettings() {
     document.getElementById('settings-screen').classList.add('active');
-    document.getElementById('game-modes-screen').classList.remove('active');
     currentScreen = 'settings';
 }
 
 function showGameModes() {
     document.getElementById('settings-screen').classList.remove('active');
-    document.getElementById('game-modes-screen').classList.add('active');
     currentScreen = 'modes';
 }
 

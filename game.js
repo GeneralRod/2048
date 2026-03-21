@@ -20,11 +20,11 @@ const DIRECTION_ARROWS = {left: '←', right: '→', up: '↑', down: '↓'};
 const MAX_UNDOS = 3;
 
 class AmbientSoundtrack {
-    constructor(enabled = true) {
+    constructor(enabled = false) {
         this.enabled = enabled;
         this.audioCtx = null;
         this.voices = [];
-        this.suspended = false;
+        this.volume = 0.45;
     }
 
     setEnabled(flag) {
@@ -36,16 +36,27 @@ class AmbientSoundtrack {
         }
     }
 
+    setVolume(vol) {
+        this.volume = Math.max(0, Math.min(1, vol));
+        this.voices.forEach(({gain}) => {
+            if (gain) gain.gain.value = this.volume * 0.055;
+        });
+    }
+
     start() {
         if (!this.enabled || this.isPlaying()) return;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
         this.audioCtx = new AudioContext();
-        const base = 174; // Hz, calming pad
+        const base = 174;
         [1, 1.25, 1.5].forEach((ratio, index) => {
             const osc = this.audioCtx.createOscillator();
             const gain = this.audioCtx.createGain();
-            gain.gain.value = 0.018 + index * 0.004;
+            gain.gain.setValueAtTime(0, this.audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(
+                this.volume * (0.018 + index * 0.004),
+                this.audioCtx.currentTime + 2
+            );
             osc.type = index === 0 ? 'sine' : 'triangle';
             osc.frequency.value = base * ratio;
             osc.connect(gain).connect(this.audioCtx.destination);
@@ -179,7 +190,7 @@ class Game2048 {
 
         this.settings = this.loadSettings();
         this.replay = new ReplayManager(() => ({grid: this.grid, score: this.score}));
-        this.soundtrack = new AmbientSoundtrack(this.settings.soundEffects !== false);
+        this.soundtrack = new AmbientSoundtrack(false);
 
         this.applySettings();
         this.setupEventListeners();
@@ -199,7 +210,7 @@ class Game2048 {
         const saved = localStorage.getItem('game2048-settings');
         return saved ? JSON.parse(saved) : {
             animationSpeed: 'normal',
-            soundEffects: true,
+            soundEffects: false,
             gridLines: true,
             theme: 'cold'
         };
@@ -213,7 +224,13 @@ class Game2048 {
         const speedValue = ANIMATION_SPEEDS[this.settings.animationSpeed] || ANIMATION_SPEEDS.normal;
         document.documentElement.style.setProperty('--tile-transition', `${speedValue}s`);
         document.documentElement.style.setProperty('--tile-appear', `${Math.max(speedValue * 0.6, 0.18)}s`);
-        this.settings.soundEffects !== false ? this.soundtrack.start() : this.soundtrack.stop();
+        const vol = typeof this.settings.ambientVolume === 'number' ? this.settings.ambientVolume : 0.45;
+        this.soundtrack.setVolume(vol);
+        if (this.settings.soundEffects) {
+            this.soundtrack.start();
+        } else {
+            this.soundtrack.stop();
+        }
     }
 
     initGame() {
