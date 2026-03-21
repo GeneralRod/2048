@@ -568,12 +568,35 @@ class Game2048 {
         if (!this.timerDisplay) return;
         const minutes = Math.floor(this.timeLeft / 60);
         const seconds = this.timeLeft % 60;
-        this.timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        const text = document.getElementById('timer-text');
+        const bar  = document.getElementById('timer-bar');
+        const formatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        if (text) {
+            text.textContent = formatted;
+        } else {
+            this.timerDisplay.textContent = formatted;
+        }
+        if (bar) {
+            const pct = (this.timeLeft / 300) * 100;
+            bar.style.width = `${pct}%`;
+            bar.classList.toggle('danger', this.timeLeft <= 60);
+        }
     }
 
     updateMovesDisplay() {
         if (!this.movesDisplay) return;
-        this.movesDisplay.textContent = `Moves: ${this.movesLeft}`;
+        const text = document.getElementById('moves-text');
+        const bar  = document.getElementById('moves-bar');
+        if (text) {
+            text.textContent = `Moves: ${this.movesLeft}`;
+        } else {
+            this.movesDisplay.textContent = `Moves: ${this.movesLeft}`;
+        }
+        if (bar) {
+            const pct = (this.movesLeft / 100) * 100;
+            bar.style.width = `${pct}%`;
+            bar.classList.toggle('danger', this.movesLeft <= 20);
+        }
     }
 
     setupEventListeners() {

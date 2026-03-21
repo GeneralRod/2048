@@ -13,8 +13,14 @@
             <button class="back-button" onclick="goToMenu()">← Menu</button>
             <div class="game-info">
                 <div class="mode-display" id="current-mode">Classic</div>
-                <div class="timer-display" id="timer" style="display: none;">5:00</div>
-                <div class="moves-display" id="moves" style="display: none;">Moves: 100</div>
+                <div class="timer-display" id="timer" style="display: none;">
+                    <span id="timer-text">5:00</span>
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="timer-bar" style="width:100%"></div></div>
+                </div>
+                <div class="moves-display" id="moves" style="display: none;">
+                    <span id="moves-text">Moves: 100</span>
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="moves-bar" style="width:100%"></div></div>
+                </div>
                 <div class="target-display" id="daily-target-display" style="display:none;">Target: 1500</div>
             </div>
             <div class="game-controls">
